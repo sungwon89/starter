@@ -74,8 +74,8 @@ def FilesystemUsedChecker():
 
         for dfline in df_result:
             dfline = dfline.split()
-            # 20% -> 20
-            if long(dfline[USAGE][:-1]) >= 20:
+            # 80% -> 80
+            if long(dfline[USAGE][:-1]) >= 80:
                 writer.writerow({'Hostname': platform.uname()[HOSTNAME],\
                                  'Filesystem': dfline[MOUNT_POINT],'Used%': dfline[USAGE]})
         csv_file.close()
@@ -91,3 +91,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
