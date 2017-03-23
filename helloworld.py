@@ -5,27 +5,50 @@
 #    Version : 0.1
 ######################################
 
+import csv
+import platform
 import commands
 
-# /var/log/syslog
-# /var/log/test_syslog
-def Errorlog():
+######################################
+# Variables
+# 0. System_ENV
+# 1. SyslogChecker
+# 2. FilesystemUsedChecker
+######################################
+FILENAME_FILESYSTEM="/home/user/test_filesystem.csv"
+FILENAME_SYSLOG="/home/user/test_syslog.csv"
+#CHECK_ERROR_LIST=['FAIL','ERROR','Fail','Error','fail','error']
+#CHECK_NO_LIST=['WARNING','Warning','warning']
+HOSTNAME=1
+USAGE = 4
+MOUNT_POINT = 5
+HEADER = 1
+
+
+def SyslogChecker():
     try:
         syslog_file = open('/var/log/syslog', 'r')
     except IOError:
         print "File is not exist."
     else:
+        # Make csv file
+        csv_file = open(FILENAME_SYSLOG, 'w')
+        fieldname_syslog = ['Hostname','Event']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldname_syslog)
+        writer.writeheader()
+
+        # print syslog
         while True:
             syslog_line = syslog_file.readline()
-
             if len(syslog_line) == 0:
                 break
             if ("FAIL" in syslog_line.upper() or "ERROR" in syslog_line.upper()) \
                     and "WARNING" not in syslog_line.upper():
-                print syslog_line
- #   finally:
-        syslog_file.close()
-
+                writer.writerow({'Hostname':platform.uname()[HOSTNAME],'Event': syslog_line})
+    finally:
+        if syslog_file:
+            syslog_file.close()
+        csv_file.close()
 
 
 # FileSystem used%
@@ -33,35 +56,38 @@ class FilesystemException(Exception):
     def __init__(self,erroutput):
         Exception.__init__(self)
 
-def Filesystem_Check():
-    USAGE = 4
-    MOUNT_POINT = 5
-    RESULT = 1
-    STATUS = 0
-
-    df = commands.getstatusoutput('df -h')
-    df_result = df[RESULT]
-    df_result = df_result.split('\n')[RESULT:]
-    df_status = df[STATUS]
+def FilesystemUsedChecker():
+    status,cmdResult = commands.getstatusoutput('df -h')
+    df_result = extractResult(HEADER, cmdResult)        # remove header
 
     try:
-        if df_status != 0:
+        if status != 0:
             raise FilesystemException
     except FilesystemException:
         print 'Error : Filesystem used%'
     else:
+        # Make csv file
+        csv_file = open(FILENAME_FILESYSTEM, 'w')
+        fieldname_filesystem = ['Hostname','Filesystem','Used%']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldname_filesystem)
+        writer.writeheader()
+
         for dfline in df_result:
             dfline = dfline.split()
+            # 20% -> 20
             if long(dfline[USAGE][:-1]) >= 20:
-                print 'Used% : {} \t\t Filesystem : {}'.format(dfline[USAGE],dfline[MOUNT_POINT])
+                writer.writerow({'Hostname': platform.uname()[HOSTNAME],\
+                                 'Filesystem': dfline[MOUNT_POINT],'Used%': dfline[USAGE]})
+        csv_file.close()
 
-#def main():
-print 'FILESYSTEM USED'
-Filesystem_Check()
-print '\n'
-print 'ERROR LOG'
-Errorlog()
+def extractResult(RESULT, cmdResult):
+    return cmdResult.split('\n')[RESULT:]
 
-#if __name__ == "__main__":
-#    main()
 
+def main():
+    FilesystemUsedChecker()
+    SyslogChecker()
+
+
+if __name__ == "__main__":
+    main()
