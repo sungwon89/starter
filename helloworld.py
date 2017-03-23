@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #####################################
 #    Name : Daily Check
 #    Language : Python
@@ -42,13 +43,16 @@ def SyslogChecker():
             syslog_line = syslog_file.readline()
             if len(syslog_line) == 0:
                 break
-            if ("FAIL" in syslog_line.upper() or "ERROR" in syslog_line.upper()) \
-                    and "WARNING" not in syslog_line.upper():
+            if isError(syslog_line):
                 writer.writerow({'Hostname':platform.uname()[HOSTNAME],'Event': syslog_line})
     finally:
         if syslog_file:
             syslog_file.close()
         csv_file.close()
+
+
+def isError(syslog_line):
+    return ("FAIL" in syslog_line.upper() or "ERROR" in syslog_line.upper()) and "WARNING" not in syslog_line.upper()
 
 
 # FileSystem used%
