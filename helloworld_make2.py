@@ -49,5 +49,9 @@ def FilesystemUsedCollector():
         UsedWriter.writerows(used_list)
     UsedOutput.close()
 
-SyslogCollector()
-FilesystemUsedCollector()
+def main():
+    SyslogCollector()
+    FilesystemUsedCollector()
+
+if __name__ == "__main__":
+    main()
