@@ -20,7 +20,7 @@ FILENAME_FILESYSTEM="/home/user/test_filesystem.csv"
 FILENAME_SYSLOG="/home/user/test_syslog.csv"
 #CHECK_ERROR_LIST=['FAIL','ERROR','Fail','Error','fail','error']
 #CHECK_NO_LIST=['WARNING','Warning','warning']
-HOSTNAME=1
+Hostname=platform.uname()[1]
 USAGE = 4
 MOUNT_POINT = 5
 HEADER = 1
@@ -44,7 +44,7 @@ def SyslogChecker():
             if len(syslog_line) == 0:
                 break
             if isError(syslog_line):
-                writer.writerow({'Hostname':platform.uname()[HOSTNAME],'Event': syslog_line})
+                writer.writerow({'Hostname':Hostname, 'Event': syslog_line})
     finally:
         if syslog_file:
             syslog_file.close()
@@ -80,8 +80,7 @@ def FilesystemUsedChecker():
             dfline = dfline.split()
             # 80% -> 80
             if long(dfline[USAGE][:-1]) >= 80:
-                writer.writerow({'Hostname': platform.uname()[HOSTNAME],\
-                                 'Filesystem': dfline[MOUNT_POINT],'Used%': dfline[USAGE]})
+                writer.writerow({'Hostname': Hostname, 'Filesystem': dfline[MOUNT_POINT], 'Used%': dfline[USAGE]})
         csv_file.close()
 
 def extractResult(RESULT, cmdResult):
@@ -91,7 +90,6 @@ def extractResult(RESULT, cmdResult):
 def main():
     FilesystemUsedChecker()
     SyslogChecker()
-
 
 if __name__ == "__main__":
     main()
